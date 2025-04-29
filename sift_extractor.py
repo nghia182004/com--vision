@@ -2,9 +2,11 @@ import cv2
 import numpy as np
 import os
 from tqdm import tqdm
-from cyvlfeat.kmeans import kmeans
+import time
+from kmeans_gpu import KMeans  # Already imported
 from cyvlfeat.sift.dsift import dsift
 import pickle
+import torch
 
 def get_images(path, size):
     total_pic = {}
@@ -28,6 +30,8 @@ train, train_digit_labels = get_images('./split_dataset/train/', 256)
 
 
 # visual_words
+import torch  # Import PyTorch
+
 def sift_features(images, size):
     print("feature number", size)
     bag_of_features = []
@@ -39,22 +43,28 @@ def sift_features(images, size):
             if descriptors is not None:
                 for des in descriptors:
                     bag_of_features.append(des)
-    
+
     print("Compute kmeans in dimensions:", size)
     bag_array = np.array(bag_of_features).astype('float32')
-    km = kmeans(bag_array, size, initialization="PLUSPLUS")   
+    
+    # Convert NumPy arrays to PyTorch tensors
+    points = torch.tensor(bag_array[None, ...])  # shape: (1, num_pts, pts_dim)
+    features = torch.tensor(bag_array[None, ...])  # shape: (1, num_pts, pts_dim)
 
-    distances = np.zeros(len(bag_array))
-    for i, point in enumerate(bag_array):
-        # Calculate distance to each center and take minimum
-        min_dist = np.min(np.sum((km - point) ** 2, axis=1))
-        distances[i] = min_dist
-            
-    # Sum of squared distances is our distortion
-    distortion = np.sum(distances)
-    print(f"Completed the 200 k-means clustering with distortion: {distortion}")
+    # Time the kmeans fitting
+    start_time = time.time()
+    kmeans = KMeans(n_clusters=size, max_iter=100)
+    centroids, assignments = kmeans(points, features)
+    elapsed = time.time() - start_time
 
-    return km
+    # Compute inertia (sum of squared distances to closest cluster center)
+    assigned_centroids = centroids[0][assignments[0]]
+    inertia = torch.sum((points[0] - assigned_centroids) ** 2).item()
+
+    print(f"KMeans inertia: {inertia}")
+    print(f"KMeans fitting time: {elapsed:.2f} seconds")
+
+    return centroids[0].cpu().numpy()
 
 
 features = sift_features(train, size=200)
