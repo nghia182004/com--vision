@@ -3,7 +3,8 @@ import numpy as np
 import os
 from tqdm import tqdm
 import time
-from kmeans_gpu import KMeans  # Already imported
+import faiss                                      
+from faiss import StandardGpuResources, GpuIndexFlatL2, Clustering
 from cyvlfeat.sift.dsift import dsift
 import pickle
 import torch
@@ -24,50 +25,47 @@ def get_images(path, size):
     return total_pic, labels
 
 # get images with resize
-train, train_digit_labels = get_images('./split_dataset/train/', 256)
+train, train_digit_labels = get_images('/content/com--vision/split_dataset/train/', 256)
 #val, val_digit_labels = get_images('./split_dataset/val/', 256)
 #test, test_digit_labels = get_images('./split_dataset/test/', 256)
 
 
 # visual_words
-import torch  # Import PyTorch
-
-def sift_features(images, size):
-    print("feature number", size)
-    bag_of_features = []
+def sift_features_faiss(images, n_clusters, gpu_id=0):
+    # 1) Extract and stack descriptors
+    bag = []
+    for _, imgs in tqdm(images.items()):
+        for img in imgs:
+            _, desc = dsift(img, step=[5,5], fast=True)
+            if desc is not None:
+                bag.append(desc)
+    if not bag:
+        return np.zeros((0,128), dtype='float32')
+    xb = np.vstack(bag).astype('float32')
     
-    print("Extract SIFT features...")
-    for key, value in tqdm(images.items()):
-        for img in value:
-            _, descriptors = dsift(img, step=[5,5], fast=True)
-            if descriptors is not None:
-                for des in descriptors:
-                    bag_of_features.append(des)
-
-    print("Compute kmeans in dimensions:", size)
-    bag_array = np.array(bag_of_features).astype('float32')
+    # 2) Set up GPU resources & index
+    res = StandardGpuResources()                     
+    cfg = faiss.GpuIndexFlatConfig(); cfg.device = gpu_id
+    index = GpuIndexFlatL2(res, xb.shape[1], cfg)    
     
-    # Convert NumPy arrays to PyTorch tensors
-    points = torch.tensor(bag_array[None, ...])  # shape: (1, num_pts, pts_dim)
-    features = torch.tensor(bag_array[None, ...])  # shape: (1, num_pts, pts_dim)
+    # 3) Clustering parameters
+    cp = faiss.Clustering(xb.shape[1], n_clusters)
+    cp.niter = 100
+    cp.max_points_per_centroid = 100000
+    cp.verbose = True
 
-    # Time the kmeans fitting
-    start_time = time.time()
-    kmeans = KMeans(n_clusters=size, max_iter=100)
-    centroids, assignments = kmeans(points, features)
-    elapsed = time.time() - start_time
+    # 4) Train
+    start = time.time()
+    cp.train(xb, index)                             
+    centroids = faiss.vector_to_array(cp.centroids).reshape(n_clusters, xb.shape[1])
+    elapsed = time.time() - start
 
-    # Compute inertia (sum of squared distances to closest cluster center)
-    assigned_centroids = centroids[0][assignments[0]]
-    inertia = torch.sum((points[0] - assigned_centroids) ** 2).item()
-
-    print(f"KMeans inertia: {inertia}")
-    print(f"KMeans fitting time: {elapsed:.2f} seconds")
-
-    return centroids[0].cpu().numpy()
+    print(f"FAISS KMeans fit time: {elapsed:.2f}s on GPU")
+    return centroids
 
 
-features = sift_features(train, size=200)
+
+features = sift_features_faiss(train, 200)
 
 print("Writing features to file...")
 with open('sift_features.pkl', 'wb') as f:
