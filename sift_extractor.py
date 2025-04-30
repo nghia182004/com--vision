@@ -7,7 +7,6 @@ import faiss
 from faiss import StandardGpuResources, GpuIndexFlatL2, Clustering
 from cyvlfeat.sift.dsift import dsift
 import pickle
-import torch
 
 def get_images(path, size):
     total_pic = {}
@@ -68,7 +67,7 @@ def sift_features_faiss(images, n_clusters, gpu_id=0):
 features = sift_features_faiss(train, 200)
 
 print("Writing features to file...")
-with open('sift_features.pkl', 'wb') as f:
+with open('/content/com--vision/sift_features.pkl', 'wb') as f:
     pickle.dump(features, f)
 
 print("SIFT features saved to sift_features.pkl")

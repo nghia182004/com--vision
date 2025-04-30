@@ -52,23 +52,23 @@ val_histograms = build_histogram(val)
 test_histograms = build_histogram(test)
 
 # 3.4 Save your final BoVW features
-with open('bovw_train_histograms.pkl', 'wb') as f:
+with open('/content/com--vision/bovw_train_histograms.pkl', 'wb') as f:
     pickle.dump(train_histograms, f)
 
-with open('bovw_val_histograms.pkl', 'wb') as f:
+with open('/content/com--vision/bovw_val_histograms.pkl', 'wb') as f:
     pickle.dump(val_histograms, f)
 
-with open('bovw_test_histograms.pkl', 'wb') as f:
+with open('/content/com--vision/bovw_test_histograms.pkl', 'wb') as f:
     pickle.dump(test_histograms, f)
 print("BoVW codebook histograms saved!")
 
-with open('train_labels', 'wb') as f:
+with open('content/com--vision/train_labels', 'wb') as f:
     pickle.dump(train_digit_labels, f)
 
-with open('val_labels', 'wb') as f:
+with open('/content/com--vision/val_labels', 'wb') as f:
     pickle.dump(val_digit_labels, f)
 
-with open('test_labels', 'wb') as f:
+with open('/content/com--vision/test_labels', 'wb') as f:
     pickle.dump(test_digit_labels, f)
 print("Labels saved!")
 
