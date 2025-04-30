@@ -22,7 +22,7 @@ val, val_digit_labels = get_images('/content/com--vision/split_dataset/val/', 25
 test, test_digit_labels = get_images('/content/com--vision/split_dataset/test/', 256)
 
 # --- 3.2 Load centroids & build FAISS index ---
-with open('sift_features.pkl', 'rb') as f:
+with open('/content/com--vision/sift_features.pkl', 'rb') as f:
     centroids = pickle.load(f).astype('float32')
 
 K, dim = centroids.shape
