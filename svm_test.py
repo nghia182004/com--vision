@@ -1,3 +1,5 @@
+from sklearnex import patch_sklearn 
+patch_sklearn()
 import joblib
 import pickle
 import matplotlib.pyplot as plt
@@ -14,7 +16,7 @@ with open('/content/com--vision/bovw_train_histograms.pkl', 'rb') as f:
 
 with open('/content/com--vision/bovw_test_histograms.pkl', 'rb') as f:
     X_test = pickle.load(f)
-with open('/content/com--vision/test_labels.pkl', 'rb') as f:
+with open('/content/com--vision/test_labels', 'rb') as f:
     y_test = pickle.load(f)
 
 # Scale the data

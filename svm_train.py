@@ -1,4 +1,6 @@
 import pickle
+from sklearnex import patch_sklearn 
+patch_sklearn()
 from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
@@ -7,12 +9,12 @@ import joblib
 # 1) Load BoVW histograms and labels
 with open('/content/com--vision/bovw_train_histograms.pkl', 'rb') as f:
     X_train = pickle.load(f)    # shape: (n_train, K)
-with open('/content/com--vision/train_labels.pkl', 'rb') as f:
+with open('/content/com--vision/train_labels', 'rb') as f:
     y_train = pickle.load(f)    # shape: (n_train,)
 
 with open('/content/com--vision/bovw_val_histograms.pkl', 'rb') as f:
     X_val = pickle.load(f)
-with open('/content/com--vision/val_labels.pkl', 'rb') as f:
+with open('/content/com--vision/val_labels', 'rb') as f:
     y_val = pickle.load(f)
 
 # 2) Feature scaling
@@ -23,7 +25,7 @@ X_val_s   = scaler.transform(X_val)
 
 # 3) Instantiate and train the SVM
 #    You can try LinearSVC for speed or SVC(kernel='rbf') for non-linear decision boundaries.
-svm = LinearSVC(C=1.0, max_iter=5000, random_state=42)
+svm = LinearSVC(C=1.0, max_iter=15000, random_state=42, verbose=1)
 svm.fit(X_train_s, y_train)
 
 # 4) Validate: check accuracy on the val set
