@@ -60,5 +60,15 @@ with open('bovw_val_histograms.pkl', 'wb') as f:
 
 with open('bovw_test_histograms.pkl', 'wb') as f:
     pickle.dump(test_histograms, f)
-
 print("BoVW codebook histograms saved!")
+
+with open('train_labels', 'wb') as f:
+    pickle.dump(train_digit_labels, f)
+
+with open('val_labels', 'wb') as f:
+    pickle.dump(val_digit_labels, f)
+
+with open('test_labels', 'wb') as f:
+    pickle.dump(test_digit_labels, f)
+print("Labels saved!")
+
