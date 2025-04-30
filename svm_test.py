@@ -1,7 +1,10 @@
+# FOR TESTING ONLY
+%matplotlib inline
 from sklearnex import patch_sklearn 
 patch_sklearn()
 import joblib
 import pickle
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
@@ -10,22 +13,15 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 # Load the pre-trained model
 m = joblib.load('/content/com--vision/bovw_svm_model.pkl')
 
-# Load the training and testing data
-with open('/content/com--vision/bovw_train_histograms.pkl', 'rb') as f:
-    X_train = pickle.load(f)
-
 with open('/content/com--vision/bovw_test_histograms.pkl', 'rb') as f:
     X_test = pickle.load(f)
 with open('/content/com--vision/test_labels', 'rb') as f:
     y_test = pickle.load(f)
 
-# Scale the data
-scaler = StandardScaler().fit(X_train)
-X_test_s = scaler.transform(X_test)
 
 # Make predictions
 print("Predicting...")
-y_pred = m['svm'].predict(m['scaler'].transform(X_test_s))
+y_pred = m['svm'].predict(m['scaler'].transform(X_test))
 
 # Evaluate the model
 accuracy = accuracy_score(y_test, y_pred)
@@ -37,10 +33,14 @@ print(classification_report(y_test, y_pred))
 # Confusion Matrix
 conf_matrix = confusion_matrix(y_test, y_pred)
 
+cm_normalized = conf_matrix.astype('float') / conf_matrix.sum(axis=1)[:, np.newaxis]
+
+class_names = ['mitsubishi_lancer', 'honda_odyssey', 'nissan_maxima', 'ford_explorer', 'honda_civic', 'nissan_altima', 'mitsubishi_outlander', 'ford_escape']
+
 # Plot the confusion matrix
-plt.figure(figsize=(8, 6))
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=set(y_test), yticklabels=set(y_test))
+plt.figure(figsize=(8, 7))
+sns.heatmap(cm_normalized, annot=True, fmt=".2f", cmap="Blues", xticklabels=class_names, yticklabels=class_names)
 plt.title('Confusion Matrix')
 plt.xlabel('Predicted Labels')
 plt.ylabel('True Labels')
-plt.savefig('svm_confusion_matrix.png')
+plt.savefig('/content/com--vision/svm_confusion_matrix.png')

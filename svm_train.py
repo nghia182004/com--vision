@@ -1,7 +1,7 @@
 import pickle
 from sklearnex import patch_sklearn 
 patch_sklearn()
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 import joblib
@@ -25,7 +25,7 @@ X_val_s   = scaler.transform(X_val)
 
 # 3) Instantiate and train the SVM
 #    You can try LinearSVC for speed or SVC(kernel='rbf') for non-linear decision boundaries.
-svm = LinearSVC(C=1.0, max_iter=15000, random_state=42, verbose=1)
+svm = SVC(kernel='sigmoid', C=1.0, gamma='scale', max_iter=15000, random_state=42, verbose=True, class_weight='balanced')
 svm.fit(X_train_s, y_train)
 
 # 4) Validate: check accuracy on the val set
@@ -33,5 +33,5 @@ y_val_pred = svm.predict(X_val_s)
 val_acc = accuracy_score(y_val, y_val_pred)
 print(f"Validation Accuracy: {val_acc*100:.2f}%")
 
-joblib.dump({'scaler': scaler, 'svm': svm}, 'bovw_svm_model.pkl')
+joblib.dump({'scaler': scaler, 'svm': svm}, '/content/com--vision/bovw_svm_model.pkl')
 
