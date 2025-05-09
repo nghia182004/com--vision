@@ -24,7 +24,7 @@ def get_images(path, size):
     return total_pic, labels
 
 # get images with resize
-train, train_digit_labels = get_images('/content/com--vision/split_dataset/train/', 256)
+train, train_digit_labels = get_images('/split_dataset/train/', 256)
 #val, val_digit_labels = get_images('./split_dataset/val/', 256)
 #test, test_digit_labels = get_images('./split_dataset/test/', 256)
 
